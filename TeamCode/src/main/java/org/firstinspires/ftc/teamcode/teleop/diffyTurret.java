@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.outoftheboxrobotics.photoncore.PhotonCore;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -29,6 +30,8 @@ public class diffyTurret extends LinearOpMode {
         TwoWheelTrackingLocalizer localizer = new TwoWheelTrackingLocalizer(leftOdo, rightOdo, swerve::getHeading);
 
         controlHub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+        PhotonCore.enable();
+
         waitForStart();
         leftOdo.reset();
         rightOdo.reset();
