@@ -7,6 +7,7 @@ The project still retains the standard FTC scaffolding (Gradle settings, `FtcRob
 ## What remains
 - **TeamCode module** with the classes required for diffy swerve and a few drivetrain-focused extras:
   - `SwerveDrive` and the supporting `IMU`, `maths` utilities, and `myDcMotorEx` helper (all assumed to be paired with goBilda 520x motors).
+  - `SwerveDrive` and the supporting `IMU`, `maths` utilities, and `myDcMotorEx` helper.
   - Two driving OpModes: `swerveTuner` (PID/offset tuning) and `diffyTurret` (adds turret/indexer controls and live odometry readout).
   - New subsystem stubs for a rotating flywheel turret and a left/right indexer servo (see `Turret.java` and `Indexer.java`).
   - Two-wheel odometry utilities (goBilda pods) for Road Runner pose tracking via `Encoder`, `LocalizationConstants`, and `TwoWheelTrackingLocalizer`.
@@ -18,6 +19,7 @@ The driving code expects the following hardware names in your configuration:
 | Device | Configuration name |
 | --- | --- |
 | goBilda Pinpoint IMU (preferred) or stock BNO055 IMU | `pinpoint` (or fallback `imu`) |
+| BNO055 IMU | `imu` |
 | Module 1 drive motors | `mod1m1`, `mod1m2` |
 | Module 2 drive motors | `mod2m1`, `mod2m2` |
 | Module 3 drive motors | `mod3m1`, `mod3m2` |
@@ -27,6 +29,9 @@ The driving code expects the following hardware names in your configuration:
 | Turret flywheel motor (goBilda 520x) | `flywheel` |
 | Turret yaw motor (goBilda 520x) | `turretYaw` |
 | Indexer Axon servo | `indexer` |
+| Turret flywheel motor | `flywheel` |
+| Turret yaw motor | `turretYaw` |
+| Indexer servo | `indexer` |
 
 Adjust these names in the code if your wiring differs.
 
@@ -36,6 +41,7 @@ Adjust these names in the code if your wiring differs.
 3. On the Driver Station, choose an OpMode:
    - **swerveTuner** (TeleOp): drive with `gamepad1`; tune PID and module zeros live via the Dashboard config page.
    - **diffyTurret** (TeleOp): drive with `gamepad1`; run the flywheel/turret with `gamepad2` (triggers for flywheel, right stick X for yaw); shift the Axon indexer servo left/right with the `dpad` buttons (`Indexer` directly moves the servo positions). Telemetry defaults to the goBilda odometry pods with the Pinpoint IMU heading; Road Runner calculates pose via `TwoWheelTrackingLocalizer`.
+   - **diffyTurret** (TeleOp): drive with `gamepad1`; run the flywheel/turret with `gamepad2` (triggers for flywheel, right stick X for yaw); shift the indexer servo left/right with the `dpad` buttons (`Indexer` directly moves the servo positions); watch Road Runner odometry on telemetry from `TwoWheelTrackingLocalizer`.
 4. Drive with `gamepad1`:
    - Left stick: translation
    - Right stick X: rotation (cubed for finer control)
