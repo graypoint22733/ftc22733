@@ -1,0 +1,53 @@
+package org.firstinspires.ftc.teamcode.teleop;
+
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
+public class TelemetryReporter {
+    private final Telemetry telemetry;
+    private final FtcDashboard dashboard = FtcDashboard.getInstance();
+
+    public TelemetryReporter(Telemetry telemetry) {
+        this.telemetry = telemetry;
+    }
+
+    public void addInitializationStatus() {
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+    }
+
+    public void reportLoop(Gamepad gamepad1, Pose2d pose, DriveController.DriveState driveState,
+                            ManipulatorController.ManipulatorState manipulatorState) {
+        TelemetryPacket packet = new TelemetryPacket();
+
+        telemetry.addData("Pose", "x=%.2f, y=%.2f, h=%.1f", pose.getX(), pose.getY(), pose.getHeading());
+        telemetry.addData("Drive", "x=%.2f y=%.2f rot=%.2f", driveState.translateX(), driveState.translateY(),
+                driveState.rotation());
+        telemetry.addData("Flywheel", manipulatorState.flywheelPower());
+        telemetry.addData("Turret yaw", manipulatorState.yawPower());
+        telemetry.addData("Indexer", manipulatorState.indexerState());
+        telemetry.addData("IMU Reset", gamepad1.a);
+        telemetry.update();
+
+        packet.put("poseX", pose.getX());
+        packet.put("poseY", pose.getY());
+        packet.put("heading", pose.getHeading());
+        packet.put("driveX", driveState.translateX());
+        packet.put("driveY", driveState.translateY());
+        packet.put("rotation", driveState.rotation());
+        packet.put("flywheelPower", manipulatorState.flywheelPower());
+        packet.put("yawPower", manipulatorState.yawPower());
+        packet.put("indexer", manipulatorState.indexerState().name());
+        packet.put("imuReset", gamepad1.a);
+        packet.put("leftTrigger", gamepad1.left_trigger);
+        packet.put("rightTrigger", gamepad1.right_trigger);
+        packet.put("speedScalar", Range.clip(SwerveTeleOpConfig.driveScale, 0, 1));
+
+        dashboard.sendTelemetryPacket(packet);
+    }
+}
