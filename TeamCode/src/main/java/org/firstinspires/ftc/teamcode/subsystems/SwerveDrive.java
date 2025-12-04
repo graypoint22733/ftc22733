@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -41,6 +42,11 @@ public class SwerveDrive {
         mod1E = hardwareMap.get(AnalogInput.class, "mod1E");
         mod2E = hardwareMap.get(AnalogInput.class, "mod2E");
         mod3E = hardwareMap.get(AnalogInput.class, "mod3E");
+
+        for (myDcMotorEx motor : new myDcMotorEx[]{mod1m1, mod1m2, mod2m1, mod2m2, mod3m1, mod3m2}) {
+            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            motor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        }
 
         mod3m1.setPowerThresholds(0.05,0);
         mod3m2.setPowerThresholds(0.05,0);
