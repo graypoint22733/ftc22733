@@ -9,6 +9,9 @@ import com.qualcomm.robotcore.hardware.PwmControl.PwmRange;
 /**
  * Placeholder indexer that rotates left/right based on driver buttons.
  * Configured for the goBilda Axon servo family.
+
+/**
+ * Placeholder indexer that rotates left/right based on driver buttons.
  */
 public class Indexer {
     private final Servo servo;
