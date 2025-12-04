@@ -2,6 +2,13 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.Servo.Direction;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
+import com.qualcomm.robotcore.hardware.PwmControl.PwmRange;
+
+/**
+ * Placeholder indexer that rotates left/right based on driver buttons.
+ * Configured for the goBilda Axon servo family.
 
 /**
  * Placeholder indexer that rotates left/right based on driver buttons.
@@ -15,6 +22,12 @@ public class Indexer {
 
     public Indexer(HardwareMap hardwareMap) {
         this.servo = hardwareMap.get(Servo.class, "indexer");
+
+        // Axon servos like a wide PWM range for full throw.
+        if (servo instanceof ServoImplEx) {
+            ((ServoImplEx) servo).setPwmRange(new PwmRange(500, 2500));
+        }
+        servo.setDirection(Direction.FORWARD);
         this.servo.setPosition(NEUTRAL_POSITION);
     }
 

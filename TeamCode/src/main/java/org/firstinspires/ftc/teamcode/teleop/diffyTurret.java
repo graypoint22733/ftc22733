@@ -2,8 +2,6 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.outoftheboxrobotics.photoncore.PhotonCore;
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -20,7 +18,6 @@ public class diffyTurret extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        LynxModule controlHub = hardwareMap.get(LynxModule.class, "Control Hub");
         SwerveDrive swerve = new SwerveDrive(telemetry, hardwareMap, true);
         Turret turret = new Turret(hardwareMap);
         Indexer indexer = new Indexer(hardwareMap);
@@ -29,16 +26,11 @@ public class diffyTurret extends LinearOpMode {
         Encoder rightOdo = new Encoder(hardwareMap, "rightOdo");
         TwoWheelTrackingLocalizer localizer = new TwoWheelTrackingLocalizer(leftOdo, rightOdo, swerve::getHeading);
 
-        controlHub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
-        PhotonCore.enable();
-
         waitForStart();
         leftOdo.reset();
         rightOdo.reset();
 
         while (opModeIsActive()) {
-            controlHub.clearBulkCache();
-
             // Drive with gamepad1
             swerve.drive(-gamepad1.left_stick_x, -gamepad1.left_stick_y,
                     gamepad1.right_stick_x * gamepad1.right_stick_x * gamepad1.right_stick_x);

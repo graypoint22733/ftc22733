@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
 import com.acmerobotics.dashboard.config.Config;
-import com.outoftheboxrobotics.photoncore.PhotonCore;
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -21,21 +19,11 @@ public class swerveTuner extends LinearOpMode {
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
 
-        // Bulk sensor reads
-        LynxModule controlHub = hardwareMap.get(LynxModule.class, "Control Hub");
-
         // Differential swerve drive
         SwerveDrive swerve = new SwerveDrive(telemetry, hardwareMap, true);
 
-        controlHub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
-
-        // Fast loop go brrr
-        PhotonCore.enable();
-
         waitForStart();
         while (opModeIsActive()) {
-            controlHub.clearBulkCache();
-
             // Push live config changes into the drive before applying stick inputs
             swerve.setPIDCoeffs(Kp, Kd, Ki, Kf, Kl);
             swerve.setModuleAdjustments(module1Adjust, module2Adjust, module3Adjust);
