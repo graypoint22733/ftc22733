@@ -1,98 +1,60 @@
 package org.firstinspires.ftc.teamcode.utility;
 
-import com.acmerobotics.roadrunner.util.NanoClock;
+import androidx.annotation.NonNull;
+
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
 /**
- * Wraps a motor instance to provide corrected velocity counts and allow reversing independently of the corresponding
- * slot's motor direction
+ * Lightweight wrapper around a motor-based encoder for odometry pods.
  */
 public class Encoder {
-    private final static int CPS_STEP = 0x10000;
-
-    private static double inverseOverflow(double input, double estimate) {
-        double real = input;
-        while (Math.abs(estimate - real) > CPS_STEP / 2.0) {
-            real += Math.signum(estimate - real) * CPS_STEP;
-        }
-        return real;
-    }
-
     public enum Direction {
         FORWARD(1),
         REVERSE(-1);
 
-        private int multiplier;
+        final int multiplier;
 
         Direction(int multiplier) {
             this.multiplier = multiplier;
         }
-
-        public int getMultiplier() {
-            return multiplier;
-        }
     }
 
-    private DcMotorEx motor;
-    private NanoClock clock;
+    private final DcMotorEx motor;
+    private int directionMultiplier = 1;
 
-    private Direction direction;
-
-    private int lastPosition;
-    private double velocityEstimate;
-    private double lastUpdateTime;
-
-    public Encoder(DcMotorEx motor, NanoClock clock) {
+    public Encoder(@NonNull DcMotorEx motor) {
         this.motor = motor;
-        this.clock = clock;
-
-        this.direction = Direction.FORWARD;
-
-        this.lastPosition = 0;
-        this.velocityEstimate = 0.0;
-        this.lastUpdateTime = clock.seconds();
     }
 
-    public Encoder(DcMotorEx motor) {
-        this(motor, NanoClock.system());
+    public Encoder(@NonNull HardwareMap hardwareMap, @NonNull String name) {
+        this((DcMotorEx) hardwareMap.get(DcMotor.class, name));
     }
 
-    public Direction getDirection() {
-        return direction;
-    }
-
-    private int getMultiplier() {
-        return getDirection().getMultiplier() * (motor.getDirection() == DcMotorSimple.Direction.FORWARD ? 1 : -1);
-    }
-
-    /**
-     * Allows you to set the direction of the counts and velocity without modifying the motor's direction state
-     * @param direction either reverse or forward depending on if encoder counts should be negated
-     */
     public void setDirection(Direction direction) {
-        this.direction = direction;
+        directionMultiplier = direction.multiplier;
     }
 
-    public int getCurrentPosition() {
-        int multiplier = getMultiplier();
-        int currentPosition = motor.getCurrentPosition() * multiplier;
-        if (currentPosition != lastPosition) {
-            double currentTime = clock.seconds();
-            double dt = currentTime - lastUpdateTime;
-            velocityEstimate = (currentPosition - lastPosition) / dt;
-            lastPosition = currentPosition;
-            lastUpdateTime = currentTime;
-        }
-        return currentPosition;
-    }
-
-    public double getRawVelocity() {
-        int multiplier = getMultiplier();
-        return motor.getVelocity() * multiplier;
+    public double getCurrentPosition() {
+        return motor.getCurrentPosition() * directionMultiplier;
     }
 
     public double getCorrectedVelocity() {
-        return inverseOverflow(getRawVelocity(), velocityEstimate);
+        return motor.getVelocity() * directionMultiplier;
+    }
+
+    public DcMotorEx getMotor() {
+        return motor;
+    }
+
+    public void reset() {
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
+    public void setHardwareDirection(DcMotorSimple.Direction direction) {
+        motor.setDirection(direction);
     }
 }

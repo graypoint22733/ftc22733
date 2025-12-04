@@ -1,67 +1,41 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.CRServoImplEx;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PwmControl;
-import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.maths.PIDcontroller;
-import org.firstinspires.ftc.teamcode.maths.SlewRateLimiter;
-import org.firstinspires.ftc.teamcode.utility.RunMotionProfile;
-
+/**
+ * Simple rotating flywheel turret: one motor for the flywheel and one for turret yaw.
+ */
 public class Turret {
+    private final DcMotorEx flywheel;
+    private final DcMotorEx yawMotor;
 
-    private final CRServoImplEx servo;
-    private final AnalogInput ma3;
-    private double adjust = 240, r = 5;
-    private final PIDcontroller pid = new PIDcontroller(0.1,0.001,0.1,0, 0.25);
-    private final RunMotionProfile profile = new RunMotionProfile(1,2,3,0,0,0,0,1000);
-    private final SlewRateLimiter limiter = new SlewRateLimiter();
-    public static final double zero = 0, stackPickup = 54;
+    public Turret(HardwareMap hardwareMap) {
+        this.flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
+        this.yawMotor = hardwareMap.get(DcMotorEx.class, "turretYaw");
 
-    public Turret(HardwareMap hardwareMap){
-        servo = hardwareMap.get(CRServoImplEx.class, "turret");
-        ma3 = hardwareMap.get(AnalogInput.class, "turretMa3");
-        servo.setPwmRange(new PwmControl.PwmRange(500, 2500));
+        flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        yawMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-    public double getHeading(){
-        return AngleUnit.normalizeDegrees(ma3.getVoltage() * 74.16 - adjust);
+    public void setFlywheelPower(double power) {
+        flywheel.setPower(power);
     }
 
-    public void moveTo(double target){
-        target = Range.clip(target, -90,90);
-        servo.setPower(limiter.rateLimit(pid.pidOut(AngleUnit.normalizeDegrees(target - getHeading())), r));
+    public void setFlywheelVelocity(double ticksPerSecond) {
+        flywheel.setVelocity(ticksPerSecond);
     }
 
-    public void moveToMP(double target) {
-        target = Range.clip(target, -90,90);
-        servo.setPower(profile.profiledMovement(target, getHeading()));
+    public void stopFlywheel() {
+        flywheel.setPower(0);
     }
 
-    public void PWMrelease() {
-        servo.setPwmDisable();
+    public void setYawPower(double power) {
+        yawMotor.setPower(power);
     }
 
-    public void setMotionConstraints(double maxVel, double maxAccel, double maxJerk){
-        profile.setMotionConstraints(maxVel, maxAccel, maxJerk);
-    }
-
-    public void setPIDcoeffs(double Kp, double Kd, double Ki, double Kf, double limit){
-        profile.setPIDcoeffs(Kp, Kd, Ki, Kf, limit);
-    }
-
-    public double getMotionTarget(){
-        return profile.getMotionTarget();
-    }
-
-    public void setR(double r){
-        this.r = r;
-    }
-
-    public void setAdjust(double adjust){
-        this.adjust = adjust;
+    public void brakeYaw() {
+        yawMotor.setPower(0);
     }
 }
