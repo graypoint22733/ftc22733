@@ -30,7 +30,6 @@ public class SwerveDrive {
     double mod2reference = 0;
     double mod3reference = 0;
     double heading;
-    double imuOffset = 0;
 
     public SwerveDrive(Telemetry telemetry, HardwareMap hardwareMap, boolean eff){
         mod1m1 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class,"mod1m1"));
@@ -138,7 +137,7 @@ public class SwerveDrive {
     }
 
     public void rotateKids(double angle) {
-        this.imuOffset = angle;
+        imu.setImuOffset(angle);
     }
 
     public void resetIMU() {

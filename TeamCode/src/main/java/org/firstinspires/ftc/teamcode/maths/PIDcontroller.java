@@ -23,14 +23,20 @@ public class PIDcontroller {
         KiS = Ki;
         KfS = Kf;
         KlS = Kl;
+
+        timer.reset();
     }
 
     //calculate
     public double pidOut(double error) {
         if (Math.abs(error) > 0) {
+            double dt = timer.seconds();
+            if (dt <= 0) {
+                dt = 1e-3;
+            }
             //integral and derivative values
-            double derivative = (error - lastError) / timer.seconds();
-            integralSum += (error * timer.seconds());
+            double derivative = (error - lastError) / dt;
+            integralSum += (error * dt);
             integralSum = Range.clip(integralSum, -Kl, Kl);
             //weight each term so that tuning makes a difference
             out = (Kp * error) + (Kd * derivative) + (Ki * integralSum) + (Kf * Math.signum(error));
