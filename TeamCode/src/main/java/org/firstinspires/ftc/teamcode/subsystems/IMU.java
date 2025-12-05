@@ -18,7 +18,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 public class IMU {
 
     private final com.qualcomm.robotcore.hardware.IMU imuDevice;
+    private final Parameters parameters;
     private double imuOffset = 0;
+    private Orientation lastOrientation = new Orientation();
 
     public IMU(HardwareMap hardwareMap) {
         com.qualcomm.robotcore.hardware.IMU found = hardwareMap.tryGet(com.qualcomm.robotcore.hardware.IMU.class, "pinpoint");
@@ -27,7 +29,7 @@ public class IMU {
         }
         imuDevice = found;
 
-        Parameters parameters = new Parameters(new IMUOrientationOnRobot(
+        parameters = new Parameters(new IMUOrientationOnRobot(
                 LogoFacingDirection.UP,
                 UsbFacingDirection.FORWARD
         ));
@@ -36,20 +38,12 @@ public class IMU {
     }
 
     public double getHeadingInDegrees() {
-        Orientation angles = imuDevice.getRobotOrientation(
-                AxesReference.INTRINSIC,
-                IMUAxesOrder.ZYX,
-                AngleUnit.DEGREES
-        );
+        Orientation angles = getOrientation(AngleUnit.DEGREES);
         return AngleUnit.normalizeDegrees(angles.firstAngle * -1 - imuOffset);
     }
 
     public double getHeadingInRadians() {
-        Orientation angles = imuDevice.getRobotOrientation(
-                AxesReference.INTRINSIC,
-                IMUAxesOrder.ZYX,
-                AngleUnit.RADIANS
-        );
+        Orientation angles = getOrientation(AngleUnit.RADIANS);
         return AngleUnit.normalizeRadians(angles.firstAngle);
     }
 
@@ -60,5 +54,42 @@ public class IMU {
     public void resetIMU() {
         imuOffset = 0;
         imuDevice.resetYaw();
+    }
+
+    /**
+     * The Control Hub's BNO055 IMU occasionally reports a transient
+     * "update error" after recent firmware changes. To keep the robot running
+     * we recover by reinitializing the IMU once and returning the latest
+     * successful orientation reading if a second attempt fails.
+     */
+    private Orientation getOrientation(AngleUnit angleUnit) {
+        try {
+            lastOrientation = imuDevice.getRobotOrientation(
+                    AxesReference.INTRINSIC,
+                    IMUAxesOrder.ZYX,
+                    angleUnit
+            );
+            return lastOrientation;
+        } catch (RuntimeException firstFailure) {
+            if (isRecoverableBnoError(firstFailure)) {
+                imuDevice.initialize(parameters);
+                try {
+                    lastOrientation = imuDevice.getRobotOrientation(
+                            AxesReference.INTRINSIC,
+                            IMUAxesOrder.ZYX,
+                            angleUnit
+                    );
+                    return lastOrientation;
+                } catch (RuntimeException secondFailure) {
+                    return lastOrientation;
+                }
+            }
+            throw firstFailure;
+        }
+    }
+
+    private boolean isRecoverableBnoError(RuntimeException exception) {
+        String message = exception.getMessage();
+        return message != null && message.toLowerCase().contains("bno055") && message.toLowerCase().contains("update");
     }
 }

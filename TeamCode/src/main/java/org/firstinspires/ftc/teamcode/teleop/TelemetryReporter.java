@@ -26,23 +26,23 @@ public class TelemetryReporter {
         TelemetryPacket packet = new TelemetryPacket();
 
         telemetry.addData("Pose", "x=%.2f, y=%.2f, h=%.1f", pose.getX(), pose.getY(), pose.getHeading());
-        telemetry.addData("Drive", "x=%.2f y=%.2f rot=%.2f", driveState.translateX(), driveState.translateY(),
-                driveState.rotation());
-        telemetry.addData("Flywheel", manipulatorState.flywheelPower());
-        telemetry.addData("Turret yaw", manipulatorState.yawPower());
-        telemetry.addData("Indexer", manipulatorState.indexerState());
+        telemetry.addData("Drive", "x=%.2f y=%.2f rot=%.2f", driveState.getTranslateX(), driveState.getTranslateY(),
+                driveState.getRotation());
+        telemetry.addData("Flywheel", manipulatorState.getFlywheelPower());
+        telemetry.addData("Turret yaw", manipulatorState.getYawPower());
+        telemetry.addData("Indexer", manipulatorState.getIndexerState());
         telemetry.addData("IMU Reset", gamepad1.a);
         telemetry.update();
 
         packet.put("poseX", pose.getX());
         packet.put("poseY", pose.getY());
         packet.put("heading", pose.getHeading());
-        packet.put("driveX", driveState.translateX());
-        packet.put("driveY", driveState.translateY());
-        packet.put("rotation", driveState.rotation());
-        packet.put("flywheelPower", manipulatorState.flywheelPower());
-        packet.put("yawPower", manipulatorState.yawPower());
-        packet.put("indexer", manipulatorState.indexerState().name());
+        packet.put("driveX", driveState.getTranslateX());
+        packet.put("driveY", driveState.getTranslateY());
+        packet.put("rotation", driveState.getRotation());
+        packet.put("flywheelPower", manipulatorState.getFlywheelPower());
+        packet.put("yawPower", manipulatorState.getYawPower());
+        packet.put("indexer", manipulatorState.getIndexerState().name());
         packet.put("imuReset", gamepad1.a);
         packet.put("leftTrigger", gamepad1.left_trigger);
         packet.put("rightTrigger", gamepad1.right_trigger);
