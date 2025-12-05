@@ -8,7 +8,29 @@ import org.firstinspires.ftc.teamcode.subsystems.Turret;
 public class ManipulatorController {
     public enum IndexerState { LEFT, RIGHT, HOLD }
 
-    public record ManipulatorState(double yawPower, double flywheelPower, IndexerState indexerState) { }
+    public static class ManipulatorState {
+        private final double yawPower;
+        private final double flywheelPower;
+        private final IndexerState indexerState;
+
+        public ManipulatorState(double yawPower, double flywheelPower, IndexerState indexerState) {
+            this.yawPower = yawPower;
+            this.flywheelPower = flywheelPower;
+            this.indexerState = indexerState;
+        }
+
+        public double getYawPower() {
+            return yawPower;
+        }
+
+        public double getFlywheelPower() {
+            return flywheelPower;
+        }
+
+        public IndexerState getIndexerState() {
+            return indexerState;
+        }
+    }
 
     private final Turret turret;
     private final Indexer indexer;

@@ -5,7 +5,29 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.subsystems.SwerveDrive;
 
 public class DriveController {
-    public record DriveState(double translateX, double translateY, double rotation) { }
+    public static class DriveState {
+        private final double translateX;
+        private final double translateY;
+        private final double rotation;
+
+        public DriveState(double translateX, double translateY, double rotation) {
+            this.translateX = translateX;
+            this.translateY = translateY;
+            this.rotation = rotation;
+        }
+
+        public double getTranslateX() {
+            return translateX;
+        }
+
+        public double getTranslateY() {
+            return translateY;
+        }
+
+        public double getRotation() {
+            return rotation;
+        }
+    }
 
     private final SwerveDrive swerveDrive;
 
