@@ -65,10 +65,10 @@ public class SwerveDrive {
 
     public void drive(double x, double y, double rot){
 
-        //Turn our MA3 absolute encoder signals from volts to degrees
-        double mod1P = mod1E.getVoltage() * 74.16;
-        double mod2P = mod2E.getVoltage() * 74.16;
-        double mod3P = mod3E.getVoltage() * 74.16;
+        // Turn our MA3 absolute encoder signals from volts to degrees
+        double mod1P = readEncoderDegrees(mod1E, module1Adjust);
+        double mod2P = readEncoderDegrees(mod2E, module2Adjust);
+        double mod3P = readEncoderDegrees(mod3E, module3Adjust);
 
         //Update heading of robot
         heading = imu.getHeadingInDegrees();
@@ -85,11 +85,6 @@ public class SwerveDrive {
             mod3reference = output[5];
             mod2reference = output[4];
         }
-
-        //set the zero of each module to be forward
-        mod3P -= module3Adjust;
-        mod2P -= module2Adjust;
-        mod1P -= module1Adjust;
 
         //Anglewrap all the angles so that the module turns both ways
         mod1P = mathsOperations.angleWrap(mod1P);
@@ -158,5 +153,9 @@ public class SwerveDrive {
 
     public double getHeading() {
         return imu.getHeadingInDegrees();
+    }
+
+    private double readEncoderDegrees(AnalogInput encoder, double offsetDegrees) {
+        return AngleUnit.normalizeDegrees((encoder.getVoltage() - 0.043) / 3.1 * 360 + offsetDegrees);
     }
 }
