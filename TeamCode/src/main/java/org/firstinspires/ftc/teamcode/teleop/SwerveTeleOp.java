@@ -10,14 +10,11 @@ import org.firstinspires.ftc.teamcode.subsystems.Indexer;
 import org.firstinspires.ftc.teamcode.subsystems.SwerveDrive;
 import org.firstinspires.ftc.teamcode.subsystems.Turret;
 import org.firstinspires.ftc.teamcode.utility.Encoder;
-import org.firstinspires.ftc.teamcode.utility.PhotonCoreManager;
 
 @TeleOp(name = "SwerveTeleOp", group = "Linear Opmode")
 public class SwerveTeleOp extends LinearOpMode {
     @Override
     public void runOpMode() {
-        PhotonCoreManager photonCore = new PhotonCoreManager(hardwareMap);
-
         MultipleTelemetry telemetry = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
         TelemetryReporter telemetryReporter = new TelemetryReporter(telemetry);
 
@@ -38,8 +35,6 @@ public class SwerveTeleOp extends LinearOpMode {
         localizationManager.reset();
 
         while (opModeIsActive()) {
-            photonCore.clearBulkCache();
-
             DriveController.DriveState driveState = driveController.driveWithGamepad(gamepad1);
             ManipulatorController.ManipulatorState manipulatorState = manipulatorController.updateFromGamepad(gamepad2);
             Pose2d pose = localizationManager.updateAndGetPose();
