@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -16,6 +18,7 @@ import org.firstinspires.ftc.teamcode.utility.myDcMotorEx;
 public class SwerveDrive {
 
     final private IMU imu;
+    final private IMU.Parameters imuParameters;
     final private myDcMotorEx mod1m1,mod1m2,mod2m1,mod2m2,mod3m1,mod3m2;
     final private AnalogInput mod1E,mod2E,mod3E;
     final private Telemetry telemetry;
@@ -30,6 +33,7 @@ public class SwerveDrive {
     double mod2reference = 0;
     double mod3reference = 0;
     double heading;
+    private double imuOffset = 0;
 
     public SwerveDrive(Telemetry telemetry, HardwareMap hardwareMap, boolean eff){
         mod1m1 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class,"mod1m1"));
@@ -57,7 +61,18 @@ public class SwerveDrive {
         mod2m2.setDirection(DcMotorSimple.Direction.REVERSE);
         mod3m2.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        imu = new IMU(hardwareMap);
+        IMU foundImu = hardwareMap.tryGet(IMU.class, "pinpoint");
+        if (foundImu == null) {
+            foundImu = hardwareMap.get(IMU.class, "imu");
+        }
+
+        imuParameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+                RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
+        ));
+        imuParameters.angleUnit = IMU.AngleUnit.DEGREES;
+        foundImu.initialize(imuParameters);
+        imu = foundImu;
 
         this.telemetry = telemetry;
         this.eff = eff;
@@ -65,13 +80,13 @@ public class SwerveDrive {
 
     public void drive(double x, double y, double rot){
 
-        //Turn our MA3 absolute encoder signals from volts to degrees
-        double mod1P = mod1E.getVoltage() * 74.16;
-        double mod2P = mod2E.getVoltage() * 74.16;
-        double mod3P = mod3E.getVoltage() * 74.16;
+        // Turn our MA3 absolute encoder signals from volts to degrees
+        double mod1P = readEncoderDegrees(mod1E, module1Adjust);
+        double mod2P = readEncoderDegrees(mod2E, module2Adjust);
+        double mod3P = readEncoderDegrees(mod3E, module3Adjust);
 
         //Update heading of robot
-        heading = imu.getHeadingInDegrees();
+        heading = getHeadingInDegrees();
 
         //Retrieve the angle and power for each module
         double[] output = swavemath.calculate(y,-x,-rot,heading,true);
@@ -85,11 +100,6 @@ public class SwerveDrive {
             mod3reference = output[5];
             mod2reference = output[4];
         }
-
-        //set the zero of each module to be forward
-        mod3P -= module3Adjust;
-        mod2P -= module2Adjust;
-        mod1P -= module1Adjust;
 
         //Anglewrap all the angles so that the module turns both ways
         mod1P = mathsOperations.angleWrap(mod1P);
@@ -137,11 +147,15 @@ public class SwerveDrive {
     }
 
     public void rotateKids(double angle) {
-        imu.setImuOffset(angle);
+        imuOffset = AngleUnit.normalizeDegrees(imuOffset + angle);
     }
 
     public void resetIMU() {
-        imu.resetIMU();
+        imu.resetYaw();
+        imuParameters.mode = IMU.Parameters.Mode.IMU;
+        imu.initialize(imuParameters);
+        imu.setYaw(0);
+        imuOffset = 0;
     }
 
     //tune module PIDs
@@ -157,6 +171,14 @@ public class SwerveDrive {
     }
 
     public double getHeading() {
-        return imu.getHeadingInDegrees();
+        return getHeadingInDegrees();
+    }
+
+    private double readEncoderDegrees(AnalogInput encoder, double offsetDegrees) {
+        return AngleUnit.normalizeDegrees((encoder.getVoltage() - 0.043) / 3.1 * 360 + offsetDegrees);
+    }
+
+    private double getHeadingInDegrees() {
+        return AngleUnit.normalizeDegrees(-imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) - imuOffset);
     }
 }
