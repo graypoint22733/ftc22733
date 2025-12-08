@@ -15,15 +15,16 @@ import java.util.List;
 import java.util.function.DoubleSupplier;
 
 /**
- * Two-wheel tracking localizer using parallel goBilda pods plus the IMU heading.
+ * Two-wheel tracking localizer using parallel goBilda pods plus the IMU
+ * heading.
  */
 public class TwoWheelTrackingLocalizer extends TwoTrackingWheelLocalizer {
     private final Encoder leftEncoder, rightEncoder;
     private final DoubleSupplier headingSupplier;
 
     public TwoWheelTrackingLocalizer(@NonNull Encoder leftEncoder,
-                                     @NonNull Encoder rightEncoder,
-                                     @NonNull DoubleSupplier headingSupplier) {
+            @NonNull Encoder rightEncoder,
+            @NonNull DoubleSupplier headingSupplier) {
         super(Arrays.asList(LEFT_WHEEL_POSE, RIGHT_WHEEL_POSE));
         this.leftEncoder = leftEncoder;
         this.rightEncoder = rightEncoder;
@@ -31,9 +32,9 @@ public class TwoWheelTrackingLocalizer extends TwoTrackingWheelLocalizer {
     }
 
     public TwoWheelTrackingLocalizer(@NonNull Encoder leftEncoder,
-                                     @NonNull Encoder rightEncoder,
-                                     @NonNull DoubleSupplier headingSupplier,
-                                     boolean reverseLeft) {
+            @NonNull Encoder rightEncoder,
+            @NonNull DoubleSupplier headingSupplier,
+            boolean reverseLeft) {
         this(leftEncoder, rightEncoder, headingSupplier);
         if (reverseLeft) {
             this.leftEncoder.setDirection(Encoder.Direction.REVERSE);
@@ -45,8 +46,7 @@ public class TwoWheelTrackingLocalizer extends TwoTrackingWheelLocalizer {
     public List<Double> getWheelPositions() {
         return Arrays.asList(
                 encoderTicksToInches(leftEncoder.getCurrentPosition()),
-                encoderTicksToInches(rightEncoder.getCurrentPosition())
-        );
+                encoderTicksToInches(rightEncoder.getCurrentPosition()));
     }
 
     @NonNull
@@ -54,8 +54,7 @@ public class TwoWheelTrackingLocalizer extends TwoTrackingWheelLocalizer {
     public List<Double> getWheelVelocities() {
         return Arrays.asList(
                 encoderTicksToInches(leftEncoder.getCorrectedVelocity()),
-                encoderTicksToInches(rightEncoder.getCorrectedVelocity())
-        );
+                encoderTicksToInches(rightEncoder.getCorrectedVelocity()));
     }
 
     @Override
@@ -64,9 +63,10 @@ public class TwoWheelTrackingLocalizer extends TwoTrackingWheelLocalizer {
     }
 
     @Override
-    public double getHeadingVelocity() {
-        // Heading velocity not used for swerve odometry, return 0 to keep the interface happy.
-        return 0;
+    public Double getHeadingVelocity() {
+        // Heading velocity not used for swerve odometry, return 0.0 to keep the
+        // interface happy.
+        return 0.0;
     }
 
     public void resetEncoders() {

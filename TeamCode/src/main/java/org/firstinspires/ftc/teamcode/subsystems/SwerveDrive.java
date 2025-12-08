@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.qualcomm.robotcore.hardware.Gamepad;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -18,15 +20,15 @@ import org.firstinspires.ftc.teamcode.utility.myDcMotorEx;
 public class SwerveDrive {
 
     final private IMU imu;
-    final private IMU.Parameters imuParameters;
-    final private myDcMotorEx mod1m1,mod1m2,mod2m1,mod2m2,mod3m1,mod3m2;
-    final private AnalogInput mod1E,mod2E,mod3E;
+
+    final private myDcMotorEx mod1m1, mod1m2, mod2m1, mod2m2, mod3m1, mod3m2;
+    final private AnalogInput mod1E, mod2E, mod3E;
     final private Telemetry telemetry;
     final private boolean eff;
     private double module1Adjust = -10, module2Adjust = -10, module3Adjust = -45;
-    private final PIDcontroller mod1PID = new PIDcontroller(0.1,0.002,3,1, 0.5);
-    private final PIDcontroller mod2PID = new PIDcontroller(0.1,0.002,2,0.5, 0.5);
-    private final PIDcontroller mod3PID = new PIDcontroller(0.1,0.002,1,0.5, 0.75);
+    private final PIDcontroller mod1PID = new PIDcontroller(0.1, 0.002, 3, 1, 0.5);
+    private final PIDcontroller mod2PID = new PIDcontroller(0.1, 0.002, 2, 0.5, 0.5);
+    private final PIDcontroller mod3PID = new PIDcontroller(0.1, 0.002, 1, 0.5, 0.75);
     private final swerveKinematics swavemath = new swerveKinematics();
 
     double mod1reference = 0;
@@ -35,28 +37,28 @@ public class SwerveDrive {
     double heading;
     private double imuOffset = 0;
 
-    public SwerveDrive(Telemetry telemetry, HardwareMap hardwareMap, boolean eff){
-        mod1m1 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class,"mod1m1"));
-        mod1m2 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class,"mod1m2"));
-        mod2m1 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class,"mod2m1"));
-        mod2m2 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class,"mod2m2"));
-        mod3m1 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class,"mod3m1"));
-        mod3m2 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class,"mod3m2"));
+    public SwerveDrive(Telemetry telemetry, HardwareMap hardwareMap, boolean eff) {
+        mod1m1 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "mod1m1"));
+        mod1m2 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "mod1m2"));
+        mod2m1 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "mod2m1"));
+        mod2m2 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "mod2m2"));
+        mod3m1 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "mod3m1"));
+        mod3m2 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "mod3m2"));
         mod1E = hardwareMap.get(AnalogInput.class, "mod1E");
         mod2E = hardwareMap.get(AnalogInput.class, "mod2E");
         mod3E = hardwareMap.get(AnalogInput.class, "mod3E");
 
-        for (myDcMotorEx motor : new myDcMotorEx[]{mod1m1, mod1m2, mod2m1, mod2m2, mod3m1, mod3m2}) {
+        for (myDcMotorEx motor : new myDcMotorEx[] { mod1m1, mod1m2, mod2m1, mod2m2, mod3m1, mod3m2 }) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             motor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         }
 
-        mod3m1.setPowerThresholds(0.05,0);
-        mod3m2.setPowerThresholds(0.05,0);
-        mod1m1.setPowerThresholds(0.05,0);
-        mod1m2.setPowerThresholds(0.05,0);
-        mod2m1.setPowerThresholds(0.05,0);
-        mod2m2.setPowerThresholds(0.05,0);
+        mod3m1.setPowerThresholds(0.05, 0);
+        mod3m2.setPowerThresholds(0.05, 0);
+        mod1m1.setPowerThresholds(0.05, 0);
+        mod1m2.setPowerThresholds(0.05, 0);
+        mod2m1.setPowerThresholds(0.05, 0);
+        mod2m2.setPowerThresholds(0.05, 0);
 
         mod2m2.setDirection(DcMotorSimple.Direction.REVERSE);
         mod3m2.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -66,42 +68,42 @@ public class SwerveDrive {
             foundImu = hardwareMap.get(IMU.class, "imu");
         }
 
-        imuParameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+        IMU.Parameters localParams = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
-        ));
-        imuParameters.angleUnit = IMU.AngleUnit.DEGREES;
-        foundImu.initialize(imuParameters);
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
+        // Initialize IMU with parameters
+        foundImu.initialize(localParams);
         imu = foundImu;
-
+        // Store telemetry and efficiency flag
         this.telemetry = telemetry;
         this.eff = eff;
     }
 
-    public void drive(double x, double y, double rot){
-
-        // Turn our MA3 absolute encoder signals from volts to degrees
+    /**
+     * Drive using explicit x, y, and rotation values.
+     */
+    public void drive(double x, double y, double rot) {
         double mod1P = readEncoderDegrees(mod1E, module1Adjust);
         double mod2P = readEncoderDegrees(mod2E, module2Adjust);
         double mod3P = readEncoderDegrees(mod3E, module3Adjust);
 
-        //Update heading of robot
+        // Update heading of robot
         heading = getHeadingInDegrees();
 
-        //Retrieve the angle and power for each module
-        double[] output = swavemath.calculate(y,-x,-rot,heading,true);
+        // Retrieve the angle and power for each module
+        double[] output = swavemath.calculate(y, -x, -rot, heading, true);
         double mod1power = output[0];
         double mod3power = output[1];
         double mod2power = output[2];
 
-        //keep previous module heading if joystick not being used
-        if (y != 0 || x != 0 || rot != 0){
+        // keep previous module heading if joystick not being used
+        if (y != 0 || x != 0 || rot != 0) {
             mod1reference = output[3];
             mod3reference = output[5];
             mod2reference = output[4];
         }
 
-        //Anglewrap all the angles so that the module turns both ways
+        // Anglewrap all the angles so that the module turns both ways
         mod1P = mathsOperations.angleWrap(mod1P);
         mod2P = mathsOperations.angleWrap(mod2P);
         mod3P = mathsOperations.angleWrap(mod3P);
@@ -110,79 +112,104 @@ public class SwerveDrive {
         mod2reference = mathsOperations.angleWrap(mod2reference);
         mod3reference = mathsOperations.angleWrap(mod3reference);
 
-        //Make sure that a module never turns more than 90 degrees
-        double[] mod1efvalues = mathsOperations.efficientTurn(mod1reference,mod1P,mod1power);
+        // Make sure that a module never turns more than 90 degrees
+        double[] mod1efvalues = mathsOperations.efficientTurn(mod1reference, mod1P, mod1power);
 
-        double[] mod2efvalues = mathsOperations.efficientTurn(mod2reference,mod2P,mod2power);
+        double[] mod2efvalues = mathsOperations.efficientTurn(mod2reference, mod2P, mod2power);
 
-        double[] mod3efvalues = mathsOperations.efficientTurn(mod3reference,mod3P,mod3power);
+        double[] mod3efvalues = mathsOperations.efficientTurn(mod3reference, mod3P, mod3power);
 
         if (eff) {
-            mod1reference=mod1efvalues[0];
-            mod1power=mod1efvalues[1];
-            mod2reference=mod2efvalues[0];
-            mod2power=mod2efvalues[1];
-            mod3reference=mod3efvalues[0];
-            mod3power=mod3efvalues[1];
+            mod1reference = mod1efvalues[0];
+            mod1power = mod1efvalues[1];
+            mod2reference = mod2efvalues[0];
+            mod2power = mod2efvalues[1];
+            mod3reference = mod3efvalues[0];
+            mod3power = mod3efvalues[1];
         }
 
-        //change coax values into diffy values from pid and power
-        double[] mod1values = mathsOperations.diffyConvert(mod1PID.pidOut(AngleUnit.normalizeDegrees(mod1reference-mod1P)),-mod1power);
+        // change coax values into diffy values from pid and power
+        double[] mod1values = mathsOperations
+                .diffyConvert(mod1PID.pidOut(AngleUnit.normalizeDegrees(mod1reference - mod1P)), -mod1power);
         mod1m1.setPower(mod1values[0]);
         mod1m2.setPower(mod1values[1]);
-        double[] mod2values = mathsOperations.diffyConvert(-mod2PID.pidOut(AngleUnit.normalizeDegrees(mod2reference-mod2P)),mod2power);
+        double[] mod2values = mathsOperations
+                .diffyConvert(-mod2PID.pidOut(AngleUnit.normalizeDegrees(mod2reference - mod2P)), mod2power);
         mod2m1.setPower(mod2values[0]);
         mod2m2.setPower(mod2values[1]);
-        double[] mod3values = mathsOperations.diffyConvert(-mod3PID.pidOut(AngleUnit.normalizeDegrees(mod3reference-mod3P)),mod3power);
+        double[] mod3values = mathsOperations
+                .diffyConvert(-mod3PID.pidOut(AngleUnit.normalizeDegrees(mod3reference - mod3P)), mod3power);
         mod3m1.setPower(mod3values[0]);
         mod3m2.setPower(mod3values[1]);
 
-        telemetry.addData("mod1reference",mod1reference);
-        telemetry.addData("mod2reference",mod2reference);
-        telemetry.addData("mod3reference",mod3reference);
+        telemetry.addData("mod1reference", mod1reference);
+        telemetry.addData("mod2reference", mod2reference);
+        telemetry.addData("mod3reference", mod3reference);
 
-        telemetry.addData("mod1P",mod1P);
-        telemetry.addData("mod2P",mod2P);
-        telemetry.addData("mod3P",mod3P);
+        telemetry.addData("mod1P", mod1P);
+        telemetry.addData("mod2P", mod2P);
+        telemetry.addData("mod3P", mod3P);
     }
 
+    /**
+     * Rotate robot by a given angle (degrees).
+     */
     public void rotateKids(double angle) {
         imuOffset = AngleUnit.normalizeDegrees(imuOffset + angle);
     }
 
+    /**
+     * Reset IMU yaw to zero.
+     */
     public void resetIMU() {
         imu.resetYaw();
-        imuParameters.mode = IMU.Parameters.Mode.IMU;
-        imu.initialize(imuParameters);
-        imu.setYaw(0);
         imuOffset = 0;
     }
 
-    //tune module PIDs
-    public void setPIDCoeffs(double Kp, double Kd,double Ki, double Kf, double limit){
+    // Tune module PIDs
+    /**
+     * Set PID coefficients for module 1 (others share same PID instance).
+     */
+    public void setPIDCoeffs(double Kp, double Kd, double Ki, double Kf, double limit) {
         mod1PID.setPIDgains(Kp, Kd, Ki, Kf, limit);
     }
 
-    //tunable module zeroing
-    public void setModuleAdjustments(double module1Adjust, double module2Adjust, double module3Adjust){
-        this.module1Adjust=module1Adjust;
-        this.module2Adjust=module2Adjust;
-        this.module3Adjust=module3Adjust;
+    // Tunable module zeroing
+    public void setModuleAdjustments(double module1Adjust, double module2Adjust, double module3Adjust) {
+        this.module1Adjust = module1Adjust;
+        this.module2Adjust = module2Adjust;
+        this.module3Adjust = module3Adjust;
     }
 
+    /**
+     * Get robot heading in degrees.
+     */
     public double getHeading() {
         return getHeadingInDegrees();
     }
 
+    /**
+     * Convert encoder voltage to degrees with offset.
+     */
     private double readEncoderDegrees(AnalogInput encoder, double offsetDegrees) {
         return AngleUnit.normalizeDegrees((encoder.getVoltage() - 0.043) / 3.1 * 360 + offsetDegrees);
     }
 
+    /**
+     * Internal helper to get heading from IMU.
+     */
     private double getHeadingInDegrees() {
         return AngleUnit.normalizeDegrees(-imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) - imuOffset);
     }
 
-    private double readEncoderDegrees(AnalogInput encoder, double offsetDegrees) {
-        return AngleUnit.normalizeDegrees((encoder.getVoltage() - 0.043) / 3.1 * 360 + offsetDegrees);
+    /**
+     * Drive using a Gamepad. Left stick controls translation, right stick X
+     * controls rotation.
+     */
+    public void drive(com.qualcomm.robotcore.hardware.Gamepad gamepad) {
+        double x = gamepad.left_stick_x;
+        double y = -gamepad.left_stick_y; // invert Y for forward
+        double rot = gamepad.right_stick_x;
+        drive(x, y, rot);
     }
 }
