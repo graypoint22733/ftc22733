@@ -49,7 +49,6 @@ public class TelemetryReporter {
         packet.put("speedScalar", Range.clip(SwerveTeleOpConfig.driveScale, 0, 1));
 
         dashboard.sendTelemetryPacket(packet);
-        public class fdlkafj
 
     }
 }
