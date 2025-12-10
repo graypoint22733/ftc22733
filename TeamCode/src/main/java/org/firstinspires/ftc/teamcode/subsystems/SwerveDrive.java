@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.qualcomm.robotcore.hardware.Gamepad;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -149,13 +148,6 @@ public class SwerveDrive {
         telemetry.addData("mod1P", mod1P);
         telemetry.addData("mod2P", mod2P);
         telemetry.addData("mod3P", mod3P);
-    }
-
-    /**
-     * Rotate robot by a given angle (degrees).
-     */
-    public void rotateKids(double angle) {
-        imuOffset = AngleUnit.normalizeDegrees(imuOffset + angle);
     }
 
     /**
